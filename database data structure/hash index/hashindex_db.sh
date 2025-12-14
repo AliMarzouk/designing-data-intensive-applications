@@ -6,6 +6,10 @@ declare -A position_by_key # hash map
 declare -i last_index=0 # integer
 
 db_set() {
+    local key=$1
+    local value=$2
+    
+    local key_len=${#ke}
     echo "$1,$2" >> database
     last_index=$(( last_index + 1 ))
     position_by_key[$1]=$last_index
