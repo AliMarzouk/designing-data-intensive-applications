@@ -1,4 +1,4 @@
-# Hash Index page 72
+# Hash Index - page 72
 This is a simple implementation of key-value database with an in-memory hash index. The data is saved in a file in a binary format. 
 
 Data is saved with fixed-length prefix. For each couple (key, value) the data is saved in the following format.
