@@ -31,14 +31,11 @@ func (node *Node) PrintInOrder() {
 	}
 	n := len(node.keys)
 	for i := 0; i < n; i++ {
-		// Recurse on child i if not leaf
 		if !node.isLeaf && len(node.children) > i {
 			node.children[i].PrintInOrder()
 		}
-		// Print current key
 		fmt.Printf("%d ", node.keys[i])
 	}
-	// Finally, recurse on last child if not leaf
 	if !node.isLeaf && len(node.children) > n {
 		node.children[n].PrintInOrder()
 	}
@@ -50,11 +47,9 @@ func (node *Node) Print(level int) {
 		fmt.Println("<nil>")
 		return
 	}
-	// Print current node's keys with indentation
 	fmt.Printf("%s", strings.Repeat("  ", level))
-	fmt.Printf("%v\n", node.keys)
+	fmt.Printf("%v [length=%v; isLeaf=%v]\n", node.keys, node.length, node.isLeaf)
 
-	// Recurse on children if not leaf
 	if !node.isLeaf {
 		for _, child := range node.children {
 			child.Print(level + 1)
@@ -68,11 +63,17 @@ func (parent *Node) split(childIndex int) {
 		panic("cannot split nil child")
 	}
 	middleElement := childToSplit.keys[BRANCHING/2-1]
-	parent.keys = slices.Insert(parent.keys, childIndex, middleElement)
+	if childIndex == MAX_KEYS {
+		parent.keys = append(parent.keys, middleElement)
+	} else {
+		parent.keys = slices.Insert(parent.keys, childIndex, middleElement)
+	}
+	parent.length++
 
-	newKeys := childToSplit.keys[BRANCHING/2:]
+	newKeys := make([]int, MIN_KEYS)
+	copy(newKeys, childToSplit.keys[BRANCHING/2:])
 	childToSplit.keys = childToSplit.keys[:BRANCHING/2-1]
-	childToSplit.length = BRANCHING/2 - 1
+	childToSplit.length = len(newKeys)
 
 	var newChildren = [BRANCHING]*Node{}
 	newIsLeaf := true
@@ -85,7 +86,7 @@ func (parent *Node) split(childIndex int) {
 			}
 		}
 	}
-	newChild := NewNode(newKeys, newChildren, len(newKeys), newIsLeaf) // determine is leaf value
+	newChild := NewNode(newKeys, newChildren, len(newKeys), newIsLeaf)
 
 	insertChild(&parent.children, childIndex+1, newChild) // insert newChild at the parent.children correct position in parent
 }
@@ -108,6 +109,7 @@ func (node *Node) add(newKey int) {
 
 			if node.keys[i] > newKey {
 				node.keys = slices.Insert(node.keys, i, newKey)
+				node.length += 1
 				return
 			}
 		}
@@ -122,15 +124,21 @@ func (node *Node) add(newKey int) {
 
 			if node.keys[i] > newKey {
 				nextChildPos = i
+				break
 			}
 		}
 		if nextChildPos == -1 {
-			nextChildPos = BRANCHING - 1
+			nextChildPos = node.length
+		}
+
+		if node.children[nextChildPos] == nil {
+			node.children[nextChildPos] = NewNode([]int{}, [BRANCHING]*Node{}, 0, true)
+			node.isLeaf = false
 		}
 
 		if node.children[nextChildPos].length == MAX_KEYS {
 			node.split(nextChildPos)
-			if node.keys[nextChildPos] < newKey {
+			if nextChildPos < len(node.keys) && node.keys[nextChildPos] < newKey {
 				nextChildPos += 1
 			}
 		}
@@ -157,26 +165,28 @@ func (node Node) String() string {
 }
 
 func main() {
-	// leafLeft := NewNode([]int{30, 40}, [BRANCHING]*Node{}, 2, true)
-	// leafMiddle := NewNode([]int{65, 67}, [BRANCHING]*Node{}, 2, true)
-	// leafMiddleRight := NewNode([]int{80, 81}, [BRANCHING]*Node{}, 2, true)
-	// interLeft := NewNode([]int{50, 60, 70}, [BRANCHING]*Node{leafLeft, nil, leafMiddle, leafMiddleRight}, 3, false)
-	// leafRight := NewNode([]int{100, 200, 300}, [BRANCHING]*Node{}, 3, true)
-	// root := NewNode([]int{2, 85}, [BRANCHING]*Node{nil, interLeft, leafRight}, 1, false)
-	// root.PrintInOrder()
-	// fmt.Println()
-	// root.Print(0)
-	// fmt.Println("============")
-	// root.split(1)
-	// root.PrintInOrder()
-	// fmt.Println()
-	// root.Print(0)
-	// fmt.Println("============")
 
-	test := NewNode([]int{30, 40, 50}, [BRANCHING]*Node{}, 3, true)
-	test = test.addRoot(3)
-	test = test.addRoot(4)
-	test = test.addRoot(5)
-	test.Print(0)
-	test.PrintInOrder()
+	root := NewNode([]int{}, [BRANCHING]*Node{}, 0, true)
+	root = root.addRoot(2)
+	root = root.addRoot(60)
+	root = root.addRoot(85)
+	root = root.addRoot(50)
+	root = root.addRoot(70)
+	root = root.addRoot(30)
+	root = root.addRoot(40)
+	root = root.addRoot(100)
+	root = root.addRoot(200)
+	root = root.addRoot(65)
+	root = root.addRoot(75)
+	root = root.addRoot(64)
+
+	root = root.addRoot(73)
+	root = root.addRoot(92)
+	root = root.addRoot(13)
+	root = root.addRoot(18)
+	root = root.addRoot(24)
+	root = root.addRoot(44)
+
+	root.Print(0)
+	root.PrintInOrder()
 }
